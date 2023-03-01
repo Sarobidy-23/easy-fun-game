@@ -1,18 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import './Environement.css';
 import { minimax, isWinner, getAvailable } from '../../bot/data';
+import { EnvPropsType, PositionType, RewardIndexedType } from '../../type';
 
-type EnvPropsType = {
-    caseSize: number
-}
-type PositionType = {
-    x: number,
-    y: number
-}
-function Environement(props: EnvPropsType) {
-    const {caseSize} = props
+function Environement(envProps: EnvPropsType) {
+    const {caseSize} = envProps
     const createEnv = (size: number) => {
-        let env = Array.from(Array(size),()=>Array.from(Array(caseSize)))
+        let env = Array.from(Array(size),()=>Array.from(Array(size)))
         env.forEach((line, y)=>{
             for(let x in line){
                 env[y][x] = ''
@@ -20,7 +14,7 @@ function Environement(props: EnvPropsType) {
         })
         return env
     }
-    const [actualEnv, setActualEnv] = useState<string[][]>(createEnv(3))
+    const [actualEnv, setActualEnv] = useState<string[][]>(createEnv(caseSize))
     const [isHuman, setIsHuman] = useState<boolean>(true)
     const insert = (player: string, position: PositionType) => {
         setActualEnv(prevState => [...prevState.map((yelt, y)=>(
@@ -34,7 +28,7 @@ function Environement(props: EnvPropsType) {
     }
 
     const bot =()=>{
-        let cot:{index:{x:number,y:number}, score:number} = minimax(actualEnv,"X",0) as {index:{x:number,y:number}, score:number}
+        let cot: RewardIndexedType = minimax(actualEnv,"X",0) as RewardIndexedType
         if(cot.index){
             insert("X",cot.index)
             setIsHuman(true)
@@ -55,7 +49,8 @@ function Environement(props: EnvPropsType) {
         }
     }, [actualEnv])
 
-    const human = (x:number,y: number) => {
+    const human = (huProps:PositionType) => {
+        const {x,y} = huProps
         insert("O",{x, y});
         setIsHuman(false) 
     }
@@ -66,7 +61,7 @@ function Environement(props: EnvPropsType) {
             {actualEnv.map((yelt:string[], y)=>(
                 <tr>
                     {yelt.map((xelt:string, x)=>(
-                       <td onClick={(isHuman && actualEnv[y][x] === '') ? ()=>human(x,y): ()=>{} }>{actualEnv[y][x]}</td>
+                       <td onClick={(isHuman && actualEnv[y][x] === '') ? ()=>human({x,y}): ()=>{} }>{actualEnv[y][x]}</td>
                     ))}
                 </tr>
             ))}

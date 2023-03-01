@@ -1,3 +1,6 @@
+import { PositionType } from "../type"
+import { RewardIndexedType } from '../type/typeUtils';
+
 let directions = [ 
     [0,1], //vetical |
     [1,0], //horizontal _
@@ -15,7 +18,7 @@ export const isWinner = (board: string[][], who: string, size: number) => {
                     if((board[y]?board[y][x]:'') === who){
                         items.push({x,y})
                     }
-                    if(items.length >= 3){
+                    if(items.length >= size){
                         return items
                     }
                 }
@@ -28,8 +31,8 @@ export const isWinner = (board: string[][], who: string, size: number) => {
 }
 let maximiz = "X";
 let minimiz = "O"
-let maxDepth = 4
-let size = 8;
+let maxDepth = 3
+let size = 3;
 let caseLength = 3;
 
 export const getAvailable = (board: string[][], caseLength: number) => {
@@ -43,32 +46,28 @@ export const getAvailable = (board: string[][], caseLength: number) => {
     }
     return available
 }
-const insert = (board: string[][], who: string, position:{x:number, y:number}) =>{
+const insert = (board: string[][], who: string, position:PositionType) =>{
     board[position.y][position.x] = who
     return board
 }
-export const minimax = (board: string[][], who: string, depth: number): {index:{x:number,y:number}, score:number} | {score:number}=> {
-    if(getAvailable(board, caseLength).length === caseLength*caseLength){
-        return {index: getAvailable(board, caseLength)[Math.floor(Math.random() * (caseLength*caseLength))], score:0}
+export const minimax = (board: string[][], who: string, depth: number): RewardIndexedType | {score:number}=> {
+    let available = getAvailable(board, caseLength)
+    if(available.length === caseLength*caseLength){
+        return {index: available[Math.floor(Math.random() * (caseLength*caseLength))], score:0}
     }
+
     if(isWinner(board, maximiz, size).length !== 0){
         return {score: 20-depth}
     } else if(isWinner(board, minimiz, size).length !== 0){
         return {score: -10+depth}
-    }else if(getAvailable(board, caseLength).length === 0 || depth === maxDepth) {
+    }else if(available.length === 0 || depth === maxDepth) {
         return {score:0}
     }
 
-    let moves:{index:{x:number, y:number}, score: number}[] | {score:number}[] = []
-    getAvailable(board, caseLength).forEach((emptyIndex)=>{
+    let moves: RewardIndexedType[] | {score:number}[] = []
+    available.forEach((emptyIndex)=>{
         let tempBoard = board.map((a)=>a.slice());
-        let moveResult: {index:{x:number,y:number}, score: number} = {
-            index: {
-                x: -20,
-                y: -20
-            },
-            score: -20
-        }
+        let moveResult: Partial<RewardIndexedType> = {}
         insert(tempBoard, who, emptyIndex)
         moveResult.index = emptyIndex
         if(who === maximiz) {
@@ -79,8 +78,9 @@ export const minimax = (board: string[][], who: string, depth: number): {index:{
             moveResult.score = result.score
             
         }
-        moves.push(moveResult)
+        moves.push(moveResult as RewardIndexedType)
     })
+
     let bestIndex = 0;
     if(who === maximiz) {
         let bestScore = -100
@@ -101,4 +101,3 @@ export const minimax = (board: string[][], who: string, depth: number): {index:{
     }
     return moves[bestIndex]
 }
-console.log(minimax([["O","X",""],["O","O",""],["X","",""]],"X",0))
